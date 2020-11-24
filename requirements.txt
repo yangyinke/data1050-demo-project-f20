@@ -9,4 +9,4 @@ ipywidgets
 notebook
 expiringdict
 bs4
-json
+jsons
