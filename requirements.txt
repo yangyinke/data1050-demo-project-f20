@@ -10,3 +10,4 @@ notebook
 expiringdict
 bs4
 jsons
+dnspython
