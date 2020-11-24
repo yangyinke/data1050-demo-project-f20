@@ -8,3 +8,6 @@ requests
 ipywidgets
 notebook
 expiringdict
+bs4
+mongodb
+json
