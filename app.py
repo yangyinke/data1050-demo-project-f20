@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from pymongo import MongoClient
 import pandas as pd
 
-#from database import fetch_all_bpa_as_df
+from database import fetch_all_bpa_as_df
 
 # Definitions of constants. This projects uses extra CSS stylesheet at `./assets/style.css`
 COLORS = ['rgb(637,657,687)', 'rgb(80,80,80)', 'rgb(100,100,100)', 'rgb(115,115,115)', 'rgb(135,67,69)',
@@ -97,6 +97,27 @@ def description():
         **updates every day**. 
         ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
+def stock_price_trend():
+    """
+    Returns description of plots about stock price trend and covid case number
+    """
+    return html.Div(children=[dcc.Markdown('''
+        
+        ### Stock Price Trend
+        The plots below are about stock price trend and covid case number. Stocks were divided into three 
+        plots based on their corresponding scale.
+        ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
+
+def stock_price_fluc():
+    """
+    Returns description of plots about stock price fluctuation and covid case number
+    """
+    return html.Div(children=[dcc.Markdown('''
+        
+        ### Stock Price Fluctuation
+        The plots below are about stock price fluctuation and covid case number. Stocks were divided into three 
+        plots based on their types of fluctuation rate
+        ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
 
 # def static_stacked_trend_graph(stack=False):
@@ -151,15 +172,25 @@ def get_stock_data():
     stock_df.drop('_id', axis=1, inplace=True)
     stock_df['date'] = pd.to_datetime(stock_df['date'])
     stock_df = stock_df.dropna()
+
+    # create a new column in stock_df to show price fluctuation
+    # columns = ['AAPL', 'MSFT', 'GOOG', 'FB', 'AMZN', 'WMT', 'GE', 'MMM', 'AMT', 'JNJ', 'PFE', 'JPM', 'V', 'XOM', '^GSPC', '^DJI', 'GC=F', 'CL=F']
+    codes = stock_df['code'].unique()
+    fluc = dict()
+    for code in codes:
+        fluc[code] = [0] + [(stock_df[stock_df['code']==code].iloc[i]['close'] - stock_df[stock_df['code']==code].iloc[i-1]['close'])/stock_df[stock_df['code']==code].iloc[i-1]['close'] 
+                            for i in range(1,stock_df[stock_df['code']==code]['date'].nunique())]
+    record = []
+    for code in codes:
+        record += fluc[code]
+    stock_df['fluctuation'] = record
     return stock_df
 
-def static_stacked_trend_graph(codes, scale, target, stack=False):
+
+def static_trend_graph(codes, scale, target, covid_df, stock_df, stack=False):
     """
     Returns a plot of stock price and covid case
     """
-    covid_df = get_covid_case()
-    stock_df = get_stock_data()
-
     if covid_df is None or stock_df is None:
         return go.Figure()
     fig = go.Figure()
@@ -187,8 +218,6 @@ def static_stacked_trend_graph(codes, scale, target, stack=False):
         name = None
     fig.add_trace(go.Scatter(x=covid_df['date'], y=covid_df['new_case']/scale, mode='lines', name=name,
                              line={'width': 2, 'color': 'orange'}))
-    if stack:
-        title += ' [Stacked]'
 
     fig.update_layout(template='plotly_dark',
                       title=None,
@@ -198,6 +227,43 @@ def static_stacked_trend_graph(codes, scale, target, stack=False):
                       xaxis_title='Date')
     return fig
 
+def low_stock_price_plot(covid_df, stock_df):
+    codes = ['AAPL', 'MSFT', 'FB', 'WMT','GE', 'MMM', 'AMT', 'JNJ', 'PFE', 'JPM', 'V', 'XOM', 'CL=F']
+    fig = static_trend_graph(codes, 1000, 'close', covid_df, stock_df, stack=False)
+    fig.update_layout(title='cheap stock price & number of new cases')
+    return fig
+
+def exp_stock_price_plot(covid_df, stock_df):
+    codes = ['GOOG', 'AMZN', '^GSPC', 'GC=F',]
+    fig = static_trend_graph(codes, 100, 'close', covid_df, stock_df, stack=False)
+    fig.update_layout(title='expensive stock price & number of new cases')
+    return fig
+
+def dj_plot(covid_df, stock_df):
+    codes = ['^DJI',]
+    fig = static_trend_graph(codes, 10, 'close', covid_df, stock_df, stack=False)
+    fig.update_layout(title='Dow Jones Industrial Average & number of new cases')
+    return fig
+
+def stock_price_fluc_plot(covid_df, stock_df):
+    codes = ['AAPL', 'MSFT', 'GOOG', 'FB', 'AMZN', 'WMT', 'GE', 'MMM', 'AMT', 'JNJ', 'PFE', 'JPM', 'V', 'XOM']
+    fig = static_trend_graph(codes, 1000000, 'fluctuation',covid_df, stock_df, stack=False)
+    fig.update_layout(yaxis_title='number of new cases/fluctuation percentage',
+                  title='stock price fluctuation in percentage & number of new cases')
+    return fig
+
+def market_index_fluc_plot(covid_df, stock_df):
+    codes = ['^GSPC', '^DJI', 'GC=F']#, 'CL=F']
+    fig = static_trend_graph(codes, 1000000, 'fluctuation',covid_df, stock_df, stack=False)
+    fig.update_layout(yaxis_title='number of new cases/fluctuation percentage',
+                    title='market index fluctuation in percentage & number of new cases')
+    return fig
+
+def co_fluc_plot(covid_df, stock_df):
+    codes = ['CL=F']
+    fig = static_trend_graph(codes, 100000, 'fluctuation',covid_df, stock_df, stack=False)
+    fig.update_layout(title='Crude Oil Jan 21 fluctuation & number of new cases')
+    return fig
 
 def what_if_description():
     """
@@ -270,13 +336,25 @@ def architecture_summary():
 
 
 # Sequentially add page components to the app's layout
+
 def dynamic_layout():
+    # get data first
+    covid_df = get_covid_case()
+    stock_df = get_stock_data()
+
     return html.Div([
         page_header(),
         html.Hr(),
         description(),
-        # dcc.Graph(id='trend-graph', figure=static_stacked_trend_graph(stack=False)),
-        dcc.Graph(id='stacked-trend-graph', figure=static_stacked_trend_graph(stack=True)),
+        stock_price_trend(),
+        #dcc.Graph(id='trend-graph', figure=static_stacked_trend_graph(stack=False)),
+        dcc.Graph(id='stock_price1', figure=low_stock_price_plot(covid_df, stock_df)),
+        dcc.Graph(id='stock_price2', figure=exp_stock_price_plot(covid_df, stock_df)),
+        dcc.Graph(id='stock_price3', figure=dj_plot(covid_df, stock_df)),
+        stock_price_fluc(),
+        dcc.Graph(id='stock_fluc1', figure=stock_price_fluc_plot(covid_df, stock_df)),
+        dcc.Graph(id='stock_fluc2', figure=market_index_fluc_plot(covid_df, stock_df)),
+        dcc.Graph(id='stock_fluc3', figure=co_fluc_plot(covid_df, stock_df)),
         what_if_description(),
         what_if_tool(),
         architecture_summary(),
