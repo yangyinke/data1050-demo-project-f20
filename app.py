@@ -18,26 +18,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', '/assets/s
 # Define the dash app first
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-
-# Define component functions
-
-
-# def page_header():
-#     """
-#     Returns the page header as a dash `html.Div`
-#     """
-#     return html.Div(id='header', children=[
-#         html.Div([html.H3('Visualization with datashader and Plotly')],
-#                  className="ten columns"),
-#         html.A([html.Img(id='logo', src=app.get_asset_url('github.png'),
-#                          style={'height': '35px', 'paddingTop': '7%'}),
-#                 html.Span('Blownhither', style={'fontSize': '2rem', 'height': '35px', 'bottom': 0,
-#                                                 'paddingLeft': '4px', 'color': '#a3a7b0',
-#                                                 'textDecoration': 'none'})],
-#                className="two columns row",
-#                href='https://github.com/blownhither/'),
-#     ], className="row")
-
 def page_header():
     """
     Returns the page header as a dash `html.Div`
@@ -47,39 +27,12 @@ def page_header():
                  className="ten columns"),
         html.A([html.Img(id='logo', src=app.get_asset_url('github.png'),
                          style={'height': '35px', 'paddingTop': '7%'}),
-                html.Span('Blownhither', style={'fontSize': '2rem', 'height': '35px', 'bottom': 0,
+                html.Span('yangyinke', style={'fontSize': '2rem', 'height': '35px', 'bottom': 0,
                                                 'paddingLeft': '4px', 'color': '#a3a7b0',
                                                 'textDecoration': 'none'})],
                className="two columns row",
                href='https://github.com/yangyinke'),
     ], className="row")
-
-
-# def description():
-#     """
-#     Returns overall project description in markdown
-#     """
-#     return html.Div(children=[dcc.Markdown('''
-#         # Energy Planner
-#         As of today, 138 cities in the U.S. have formally announced 100% renewable energy goals or
-#         targets, while others are actively considering similar goals. Despite ambition and progress,
-#         conversion towards renewable energy remains challenging.
-
-#         Wind and solar power are becoming more cost effective, but they will always be unreliable
-#         and intermittent sources of energy. They follow weather patterns with potential for lots of
-#         variability. Solar power starts to die away right at sunset, when one of the two daily peaks
-#         arrives (see orange curve for load).
-
-#         **Energy Planner is a "What-If" tool to assist making power conversion plans.**
-#         It can be used to explore load satisfiability under different power contribution with 
-#         near-real-time energy production & consumption data.
-
-#         ### Data Source
-#         Energy Planner utilizes near-real-time energy production & consumption data from [BPA 
-#         Balancing Authority](https://www.bpa.gov/news/AboutUs/Pages/default.aspx).
-#         The [data source](https://transmission.bpa.gov/business/operations/Wind/baltwg.aspx) 
-#         **updates every 5 minutes**. 
-#         ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
 def description():
     """

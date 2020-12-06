@@ -1,6 +1,5 @@
-# Energy Planner
-> DATA1050 Example Project Fall 20
+# stock price under pandemic
+> DATA1050 Final Project (Yangyin Ke, Huaqi Nie, Enmin Zhou)
 
 
-https://docs.google.com/document/d/1uwpXgpEZpacViosYREnze5MGQFuVhMaRtYixxmIKXBU/edit#
-
+Project Outline: https://docs.google.com/document/d/18sS71oL4F6kYy0TrBQouTOuEHrabHRvh6OlWyAs3b_U/edit?ts=5fb0d797
