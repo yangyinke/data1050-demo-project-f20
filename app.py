@@ -3,11 +3,16 @@ import dash_core_components as dcc
 import dash_html_components as html
 import numpy as np
 import plotly.graph_objects as go
+from pymongo import MongoClient
+import pandas as pd
 
-from database import fetch_all_bpa_as_df
+#from database import fetch_all_bpa_as_df
 
 # Definitions of constants. This projects uses extra CSS stylesheet at `./assets/style.css`
-COLORS = ['rgb(67,67,67)', 'rgb(115,115,115)', 'rgb(49,130,189)', 'rgb(189,189,189)']
+COLORS = ['rgb(637,657,687)', 'rgb(80,80,80)', 'rgb(100,100,100)', 'rgb(115,115,115)', 'rgb(135,67,69)',
+          'rgb(189,189,189)', 'rgb(67,80,100)', 'rgb(123,33,67)', 'rgb(138,45,69)', 'rgb(167,167,167)',
+          'rgb(87,67,87)', 'rgb(67,67,67)', 'rgb(49,130,189)', 'rgb(467,67,35)', 'rgb(168,168,168)',
+          'rgb(6,33,105)', 'rgb(8,14,215)', 'rgb(47,47,47)']
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', '/assets/style.css']
 
 # Define the dash app first
@@ -16,6 +21,22 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Define component functions
 
+
+# def page_header():
+#     """
+#     Returns the page header as a dash `html.Div`
+#     """
+#     return html.Div(id='header', children=[
+#         html.Div([html.H3('Visualization with datashader and Plotly')],
+#                  className="ten columns"),
+#         html.A([html.Img(id='logo', src=app.get_asset_url('github.png'),
+#                          style={'height': '35px', 'paddingTop': '7%'}),
+#                 html.Span('Blownhither', style={'fontSize': '2rem', 'height': '35px', 'bottom': 0,
+#                                                 'paddingLeft': '4px', 'color': '#a3a7b0',
+#                                                 'textDecoration': 'none'})],
+#                className="two columns row",
+#                href='https://github.com/blownhither/'),
+#     ], className="row")
 
 def page_header():
     """
@@ -30,64 +51,151 @@ def page_header():
                                                 'paddingLeft': '4px', 'color': '#a3a7b0',
                                                 'textDecoration': 'none'})],
                className="two columns row",
-               href='https://github.com/blownhither/'),
+               href='https://github.com/yangyinke'),
     ], className="row")
 
+
+# def description():
+#     """
+#     Returns overall project description in markdown
+#     """
+#     return html.Div(children=[dcc.Markdown('''
+#         # Energy Planner
+#         As of today, 138 cities in the U.S. have formally announced 100% renewable energy goals or
+#         targets, while others are actively considering similar goals. Despite ambition and progress,
+#         conversion towards renewable energy remains challenging.
+
+#         Wind and solar power are becoming more cost effective, but they will always be unreliable
+#         and intermittent sources of energy. They follow weather patterns with potential for lots of
+#         variability. Solar power starts to die away right at sunset, when one of the two daily peaks
+#         arrives (see orange curve for load).
+
+#         **Energy Planner is a "What-If" tool to assist making power conversion plans.**
+#         It can be used to explore load satisfiability under different power contribution with 
+#         near-real-time energy production & consumption data.
+
+#         ### Data Source
+#         Energy Planner utilizes near-real-time energy production & consumption data from [BPA 
+#         Balancing Authority](https://www.bpa.gov/news/AboutUs/Pages/default.aspx).
+#         The [data source](https://transmission.bpa.gov/business/operations/Wind/baltwg.aspx) 
+#         **updates every 5 minutes**. 
+#         ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
 def description():
     """
     Returns overall project description in markdown
     """
     return html.Div(children=[dcc.Markdown('''
-        # Energy Planner
-        As of today, 138 cities in the U.S. have formally announced 100% renewable energy goals or
-        targets, while others are actively considering similar goals. Despite ambition and progress,
-        conversion towards renewable energy remains challenging.
+        # Covid case number and stock price
+        Explore the relationship between stock price and covid case number
 
-        Wind and solar power are becoming more cost effective, but they will always be unreliable
-        and intermittent sources of energy. They follow weather patterns with potential for lots of
-        variability. Solar power starts to die away right at sunset, when one of the two daily peaks
-        arrives (see orange curve for load).
-
-        **Energy Planner is a "What-If" tool to assist making power conversion plans.**
-        It can be used to explore load satisfiability under different power contribution with 
-        near-real-time energy production & consumption data.
-
+        
         ### Data Source
-        Energy Planner utilizes near-real-time energy production & consumption data from [BPA 
+        This project utilizes up to date covid case data from [BPA 
         Balancing Authority](https://www.bpa.gov/news/AboutUs/Pages/default.aspx).
         The [data source](https://transmission.bpa.gov/business/operations/Wind/baltwg.aspx) 
-        **updates every 5 minutes**. 
+        **updates every day**. 
         ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
 
-def static_stacked_trend_graph(stack=False):
+
+# def static_stacked_trend_graph(stack=False):
+#     """
+#     Returns scatter line plot of all power sources and power load.
+#     If `stack` is `True`, the 4 power sources are stacked together to show the overall power
+#     production.
+#     """
+#     df = fetch_all_bpa_as_df()
+#     if df is None:
+#         return go.Figure()
+#     sources = ['Wind', 'Hydro', 'Fossil/Biomass', 'Nuclear']
+#     x = df['Datetime']
+#     fig = go.Figure()
+#     for i, s in enumerate(sources):
+#         fig.add_trace(go.Scatter(x=x, y=df[s], mode='lines', name=s,
+#                                  line={'width': 2, 'color': COLORS[i]},
+#                                  stackgroup='stack' if stack else None))
+#     fig.add_trace(go.Scatter(x=x, y=df['Load'], mode='lines', name='Load',
+#                              line={'width': 2, 'color': 'orange'}))
+#     title = 'Energy Production & Consumption under BPA Balancing Authority'
+#     if stack:
+#         title += ' [Stacked]'
+#     fig.update_layout(template='plotly_dark',
+#                       title=title,
+#                       plot_bgcolor='#23272c',
+#                       paper_bgcolor='#23272c',
+#                       yaxis_title='MW',
+#                       xaxis_title='Date/Time')
+#     return fig
+
+def get_covid_case():
+    # get covid data from MongoDB
+    connection_string = "mongodb+srv://enmin:data1050@sandbox.skbnz.mongodb.net/test"
+    client = MongoClient(connection_string)
+    db = client.get_database("covid")
+    collection = db.get_collection("cases")
+    data = list(collection.find())
+    covid_df = pd.DataFrame.from_records(data)    
+    covid_df.drop('_id', axis=1, inplace=True)
+    covid_df['date'] = pd.to_datetime(covid_df['date'])
+    return covid_df
+
+def get_stock_data():
+    connection_string = "mongodb+srv://enmin:data1050@sandbox.skbnz.mongodb.net/test"
+
+    client = MongoClient(connection_string)
+    db = client.get_database("stock")
+    collection = db.get_collection("historical")
+    data = list(collection.find())
+    stock_df = pd.DataFrame.from_records(data)    
+    stock_df.drop('_id', axis=1, inplace=True)
+    stock_df['date'] = pd.to_datetime(stock_df['date'])
+    stock_df = stock_df.dropna()
+    return stock_df
+
+def static_stacked_trend_graph(codes, scale, target, stack=False):
     """
-    Returns scatter line plot of all power sources and power load.
-    If `stack` is `True`, the 4 power sources are stacked together to show the overall power
-    production.
+    Returns a plot of stock price and covid case
     """
-    df = fetch_all_bpa_as_df()
-    if df is None:
+    covid_df = get_covid_case()
+    stock_df = get_stock_data()
+
+    if covid_df is None or stock_df is None:
         return go.Figure()
-    sources = ['Wind', 'Hydro', 'Fossil/Biomass', 'Nuclear']
-    x = df['Datetime']
     fig = go.Figure()
-    for i, s in enumerate(sources):
-        fig.add_trace(go.Scatter(x=x, y=df[s], mode='lines', name=s,
+    
+    # plot the trend of close stock price
+    for i, code in enumerate(codes):
+        df = stock_df[stock_df['code'] == code]
+        #df = df[df['date'] >= '2020-01-22']
+        fig.add_trace(go.Scatter(x=df['date'], y=df[target], mode='lines', name=code,
                                  line={'width': 2, 'color': COLORS[i]},
                                  stackgroup='stack' if stack else None))
-    fig.add_trace(go.Scatter(x=x, y=df['Load'], mode='lines', name='Load',
+    
+    # plot the trend of new cases
+    if scale == 100:
+        name = 'new cases scaled by hundredth'
+    elif scale == 1000:
+        name = 'new cases scaled by thousandth'
+    elif scale == 10:
+        name = 'new cases scaled by tenth'
+    elif scale == 1000000:
+        name = 'new cases scaled by millionth'
+    elif scale == 100000:
+        name = 'new cases scaled by 1/100,000'
+    else:
+        name = None
+    fig.add_trace(go.Scatter(x=covid_df['date'], y=covid_df['new_case']/scale, mode='lines', name=name,
                              line={'width': 2, 'color': 'orange'}))
-    title = 'Energy Production & Consumption under BPA Balancing Authority'
     if stack:
         title += ' [Stacked]'
+
     fig.update_layout(template='plotly_dark',
-                      title=title,
+                      title=None,
                       plot_bgcolor='#23272c',
                       paper_bgcolor='#23272c',
-                      yaxis_title='MW',
-                      xaxis_title='Date/Time')
+                      yaxis_title='number of new cases/stock price',
+                      xaxis_title='Date')
     return fig
 
 
