@@ -1,4 +1,4 @@
-# data1050-demo-project-f20
+# data1050-final-project-f20
 
 Project Outline
 Name of Project
